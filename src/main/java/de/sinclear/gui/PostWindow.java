@@ -1,14 +1,17 @@
 package de.sinclear.gui;
 
 import de.sinclear.discord.Webhook;
-
-import javax.swing.*;
-import javax.swing.text.MaskFormatter;
-import javax.swing.text.NumberFormatter;
-import java.awt.*;
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
+import javax.swing.JFrame;
+import javax.swing.JToolBar;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
+import java.awt.Dimension;
 import java.text.ParseException;
 
 public class PostWindow extends JFrame {
