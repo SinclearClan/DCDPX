@@ -1,6 +1,8 @@
 package de.sinclear.gui;
 
+import de.sinclear.App;
 import de.sinclear.discord.Webhook;
+
 import javax.swing.JFrame;
 import javax.swing.JToolBar;
 import javax.swing.JLabel;
@@ -69,6 +71,10 @@ public class PostWindow extends JFrame {
         pingRadioButtonGroup.add(pingEveryoneRadio);
         pingRadioButtonGroup.add(pingHereRadio);
 
+        if (!App.getConfig().getWebhookUrl().isEmpty()) {
+            webhookUrlField.setText(App.getConfig().getWebhookUrl());
+        }
+
         exitBtn.addActionListener(ae -> dispose());
 
         sendBtn.addActionListener(ae -> {
@@ -108,11 +114,11 @@ public class PostWindow extends JFrame {
             if (!webhookUrlField.getText().isEmpty()) {
                 try {
                     Webhook.postDeal(webhookUrlField.getText(), post);
+                    App.getConfig().setWebhookUrl(webhookUrlField.getText());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
-
     }
 }
