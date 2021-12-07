@@ -10,25 +10,27 @@ import java.text.ParseException;
 public class App {
 
     private static Configuration configuration;
+    private static PostWindow postWindow;
 
     public static void main(final String[] args) {
-
         try {
             configuration = new Configuration();
         } catch (IOException | ClassNotFoundException ioException) {
             ioException.printStackTrace();
         }
-
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            new PostWindow();
+            postWindow = new PostWindow();
         } catch (UnsupportedLookAndFeelException | ParseException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
-
     }
 
     public static Configuration getConfig() {
         return configuration;
+    }
+
+    public static PostWindow getPostWindow() {
+        return postWindow;
     }
 }
