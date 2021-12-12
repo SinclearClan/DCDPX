@@ -3,7 +3,6 @@ package de.sinclear.gui;
 import de.sinclear.App;
 import de.sinclear.discord.Webhook;
 import de.sinclear.github.UpdateChecker;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import javax.swing.JFrame;
 import javax.swing.JToolBar;
 import javax.swing.JLabel;
@@ -73,12 +72,8 @@ public class PostWindow extends JFrame {
         pingRadioButtonGroup.add(pingEveryoneRadio);
         pingRadioButtonGroup.add(pingHereRadio);
 
-        try {
-            if (UpdateChecker.updateAvailable()) {
-                new updateAvailableDialog();
-            }
-        } catch (IOException | XmlPullParserException ioException) {
-            ioException.printStackTrace();
+        if (UpdateChecker.updateAvailable()) {
+            new updateAvailableDialog();
         }
 
         if (!App.getConfig().getWebhookUrl().isEmpty()) {
@@ -123,7 +118,7 @@ public class PostWindow extends JFrame {
             }
             if (!webhookUrlField.getText().isEmpty()) {
                 try {
-                    Webhook.postDeal(webhookUrlField.getText(), post);
+                    Webhook.post(webhookUrlField.getText(), post);
                     App.getConfig().setWebhookUrl(webhookUrlField.getText());
                 } catch (Exception e) {
                     e.printStackTrace();

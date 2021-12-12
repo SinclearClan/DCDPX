@@ -9,14 +9,15 @@ import java.text.ParseException;
 
 public class App {
 
+    private static final double VERSION = 1.2;
     private static Configuration configuration;
     private static PostWindow postWindow;
 
     public static void main(final String[] args) {
         try {
             configuration = new Configuration();
-        } catch (IOException | ClassNotFoundException ioException) {
-            ioException.printStackTrace();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -24,6 +25,10 @@ public class App {
         } catch (UnsupportedLookAndFeelException | ParseException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    public static double getVersion() {
+        return VERSION;
     }
 
     public static Configuration getConfig() {

@@ -2,8 +2,12 @@ package de.sinclear.gui;
 
 import de.sinclear.App;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import java.awt.Dimension;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 
@@ -23,6 +27,7 @@ public class updateAvailableDialog extends JFrame {
         setContentPane(rootPanel);
         getRootPane().setDefaultButton(downloadBtn);
         setLocationRelativeTo(null);
+        setAlwaysOnTop(true);
         setVisible(true);
 
         downloadBtn.addActionListener(ae -> {

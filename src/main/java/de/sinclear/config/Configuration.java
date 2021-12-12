@@ -1,12 +1,15 @@
 package de.sinclear.config;
 
-import java.io.Serializable;
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.FileInputStream;
-import java.io.ObjectOutputStream;
-import java.io.FileOutputStream;
+import java.io.Serializable;
+import java.io.BufferedReader;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
 
 /**
  * The Configuration object stores important values of DCDPX.
@@ -18,7 +21,7 @@ import java.io.FileOutputStream;
  */
 public class Configuration implements Serializable {
 
-    private final String configFilePath = getUserHomeDirectoryPath() + "/.dcdpx.config";
+    private final String configFilePath = getUserHomeDirectoryPath() + "/.dcdpxconfig.json";
     private String webhookUrl = "";
 
     public Configuration() throws IOException, ClassNotFoundException {
@@ -28,51 +31,58 @@ public class Configuration implements Serializable {
             readConfigFile();
         } else {
             //If no config file exists, a new one will be created.
-            assert createConfigFile();
-        }
-    }
-
-    /**
-     * Reads the config file (if existent) and stores the read values in the currently instantiated object.
-     * It could happen that the version of the current Configuration object is incompatible with the stored version
-     * of the Object. In this case the stored version will be deleted and replaced by an empty one. This action is
-     * necessary to ensure further functionality. It might happen everytime something about this class has changed
-     * significantly after a new DCDPX version release.
-     *
-     * @throws IOException ConfigFile not existent or can't be accessed.
-     */
-    public void readConfigFile() throws IOException {
-        ObjectInputStream reader = new ObjectInputStream(new FileInputStream(configFilePath));
-        try {
-            Configuration configFile = (Configuration) reader.readObject();
-            if (configFile.getWebhookUrl().isEmpty()) {
-                this.setWebhookUrl("https://");
-            } else {
-                this.setWebhookUrl(configFile.getWebhookUrl());
-            }
-        } catch (Exception e) {
-            File configFile = new File(getConfigFilePath());
-            assert configFile.delete();
             createConfigFile();
         }
     }
 
     /**
-     * Stores an exact copy of the currently instantiated Configuration object into the file system.
+     * Reads the config file (if existent) and stores the read values in the currently instantiated object.
      *
-     * @throws IOException ConfigFile not existent or can't be accessed.
+     * @throws IOException Config file not existent or can't be accessed.
+     */
+    public void readConfigFile() throws IOException {
+        BufferedReader reader = Files.newBufferedReader(Paths.get(configFilePath));
+        try {
+            HashMap<String, String> config = new Gson().fromJson(reader, HashMap.class);
+            if (config.get("webhookUrl").isEmpty()) {
+                this.setWebhookUrl("https://");
+            } else {
+                this.setWebhookUrl(config.get("webhookUrl"));
+            }
+        } catch (Exception e1) {
+            e1.printStackTrace();
+            File configFile = new File(getConfigFilePath());
+            try {
+                configFile.delete();
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+            createConfigFile();
+        }
+    }
+
+    /**
+     * Stores current configuration to the config file.
+     *
+     * @throws IOException Config file not existent or can't be accessed.
      */
     public void writeConfigFile() throws IOException {
-        ObjectOutputStream writer = new ObjectOutputStream(new FileOutputStream(configFilePath));
-        writer.writeObject(this);
+        HashMap<String, String> config = new HashMap<>();
+        config.put("webhookUrl", this.webhookUrl);
+        FileWriter writer = new FileWriter(configFilePath);
+        try {
+            new Gson().toJson(config, writer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         writer.close();
     }
 
     /**
-     * Checks if a ConfigFile exists at the default location.
+     * Checks if a Config file exists at the default location.
      *
-     * @return True if ConfigFile already exists.
-     * @throws IOException ConfigFile is inaccessible or is a folder.
+     * @return True if Config file already exists.
+     * @throws IOException Config file is inaccessible or is a folder.
      */
     public boolean configFileExists() throws IOException {
         File configFile = new File(configFilePath);
@@ -84,14 +94,17 @@ public class Configuration implements Serializable {
     }
 
     /**
-     * Creates a new ConfigFile at the default location.
+     * Creates a new config file at the default location.
      *
-     * @return True if file could be created. Should be False if there's already a file with the same name.
-     * @throws IOException ConfigFile is inaccessible, could not be created.
+     * @throws IOException Config file is inaccessible, could not be created.
      */
-    public boolean createConfigFile() throws IOException {
+    public void createConfigFile() throws IOException {
         File configFile = new File(configFilePath);
-        return configFile.createNewFile();
+        try {
+            configFile.createNewFile();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -114,10 +127,10 @@ public class Configuration implements Serializable {
 
     /**
      * Sets the Webhook URL into the current Configuration and also writes the changed Configuration into
-     * the ConfigFile.
+     * the config file.
      *
      * @param url Webhook URL to be stored.
-     * @throws IOException Could not store the ConfigFile.
+     * @throws IOException Could not store the config file.
      */
     public void setWebhookUrl(String url) throws IOException {
         webhookUrl = url;
@@ -125,9 +138,9 @@ public class Configuration implements Serializable {
     }
 
     /**
-     * Gets the path to the ConfigFile in the file system.
+     * Gets the path to the config file in the file system.
      *
-     * @return Path to the ConfigFile.
+     * @return Path to the config file.
      */
     public String getConfigFilePath() {
         return configFilePath;
