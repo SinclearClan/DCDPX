@@ -1,10 +1,10 @@
 package de.sinclear.config;
 
 import com.google.gson.Gson;
+import de.sinclear.App;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.nio.file.Files;
@@ -12,19 +12,21 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 
 /**
- * The Configuration object stores important values of DCDPX.
+ * The ConfigurationHandler object stores important values of DCDPX.
  * It stores a copy of itself (the object) with all these values in the user's home directory.
- * At program startup this copy of the Configuration object can be restored, so the user can continue working faster.
+ * At program startup this copy of the ConfigurationHandler object can be restored, so the user can continue working faster.
  *
  * @author marcrentschler
  * @version 1.0
  */
-public class Configuration implements Serializable {
+public class ConfigurationHandler {
 
     private final String configFilePath = getUserHomeDirectoryPath() + "/.dcdpxconfig.json";
     private String webhookUrl = "";
+    private boolean saveWebhookUrl = true;
+    private String introductionText = "";
 
-    public Configuration() throws IOException, ClassNotFoundException {
+    public ConfigurationHandler() throws IOException, ClassNotFoundException {
         //Check if a config file already exists.
         if (configFileExists()) {
             //If a config file already exists it will be read.
@@ -41,16 +43,26 @@ public class Configuration implements Serializable {
      * @throws IOException Config file not existent or can't be accessed.
      */
     public void readConfigFile() throws IOException {
-        BufferedReader reader = Files.newBufferedReader(Paths.get(configFilePath));
-        try {
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(configFilePath))) {
             HashMap<String, String> config = new Gson().fromJson(reader, HashMap.class);
             if (config.get("webhookUrl").isEmpty()) {
-                this.setWebhookUrl("https://");
+                webhookUrl = "";
             } else {
-                this.setWebhookUrl(config.get("webhookUrl"));
+                webhookUrl = config.get("webhookUrl");
             }
-        } catch (Exception e1) {
-            e1.printStackTrace();
+            if (config.get("saveWebhookUrl").isEmpty()) {
+                saveWebhookUrl = true;
+            } else {
+                saveWebhookUrl = Boolean.parseBoolean(config.get("saveWebhookUrl"));
+            }
+            if (config.get("introductionText").isEmpty()) {
+                introductionText = "";
+            } else {
+                introductionText = config.get("introductionText");
+            }
+            writeConfigFile();
+        } catch (Exception e) {
+            e.printStackTrace();
             File configFile = new File(getConfigFilePath());
             try {
                 configFile.delete();
@@ -68,14 +80,14 @@ public class Configuration implements Serializable {
      */
     public void writeConfigFile() throws IOException {
         HashMap<String, String> config = new HashMap<>();
-        config.put("webhookUrl", this.webhookUrl);
-        FileWriter writer = new FileWriter(configFilePath);
-        try {
+        config.put("webhookUrl", webhookUrl);
+        config.put("saveWebhookUrl", String.valueOf(saveWebhookUrl));
+        config.put("introductionText", introductionText);
+        try (FileWriter writer = new FileWriter(configFilePath)) {
             new Gson().toJson(config, writer);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        writer.close();
     }
 
     /**
@@ -95,16 +107,11 @@ public class Configuration implements Serializable {
 
     /**
      * Creates a new config file at the default location.
-     *
-     * @throws IOException Config file is inaccessible, could not be created.
      */
     public void createConfigFile() throws IOException {
         File configFile = new File(configFilePath);
-        try {
-            configFile.createNewFile();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        configFile.createNewFile();
+        writeConfigFile();
     }
 
     /**
@@ -126,14 +133,47 @@ public class Configuration implements Serializable {
     }
 
     /**
-     * Sets the Webhook URL into the current Configuration and also writes the changed Configuration into
-     * the config file.
+     * Gets the setting if the Webhook URL should be saved.
      *
-     * @param url Webhook URL to be stored.
-     * @throws IOException Could not store the config file.
+     * @return True if the Webhook URL should be saved.
      */
-    public void setWebhookUrl(String url) throws IOException {
-        webhookUrl = url;
+    public boolean getSaveWebhookUrl() {
+        return saveWebhookUrl;
+    }
+
+    /**
+     * Sets if the Webhook URL should be saved.
+     *
+     * @param save If true, the Webhook URL will be saved to the config file.
+     */
+    public void setSaveWebhookUrl(boolean save) {
+        saveWebhookUrl = save;
+    }
+
+    /**
+     * Gets the currently stored introduction text.
+     *
+     * @return Introduction text.
+     */
+    public String getIntroductionText() {
+        return introductionText;
+    }
+
+    /**
+     * Sets the currently stored introduction text.
+     * @param text New introduction text.
+     */
+    public void setIntroductionText(String text) {
+        introductionText = text;
+    }
+
+    /**
+     * Sets the values into the current Configuration and also writes the changed Configuration into
+     * the config file.
+     */
+    public void setConfigFromGui() throws IOException {
+        webhookUrl = App.getPostWindow().getWebhookUrl();
+        introductionText = App.getPostWindow().getIntroductionText();
         writeConfigFile();
     }
 

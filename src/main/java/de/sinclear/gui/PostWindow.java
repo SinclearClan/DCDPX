@@ -14,6 +14,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import java.awt.Dimension;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.text.ParseException;
 
@@ -56,6 +57,8 @@ public class PostWindow extends JFrame {
     private JTextField gameLink2Field;
     private JButton exitBtn;
     private JButton sendBtn;
+    private JButton settingsBtn;
+    private JButton webhookInfoBtn;
 
     public PostWindow() throws ParseException {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -72,6 +75,17 @@ public class PostWindow extends JFrame {
         pingRadioButtonGroup.add(pingEveryoneRadio);
         pingRadioButtonGroup.add(pingHereRadio);
 
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent windowEvent) {
+                try {
+                    App.getConfig().setConfigFromGui();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         if (UpdateChecker.updateAvailable()) {
             new updateAvailableDialog();
         }
@@ -80,7 +94,18 @@ public class PostWindow extends JFrame {
             webhookUrlField.setText(App.getConfig().getWebhookUrl());
         }
 
-        exitBtn.addActionListener(ae -> dispose());
+        settingsBtn.addActionListener(ae -> {
+            try {
+                App.getSettingsWindow().display(true);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
+
+        exitBtn.addActionListener(ae -> {
+            App.getSettingsWindow().dispose();
+            dispose();
+        });
 
         sendBtn.addActionListener(ae -> {
             String post = "";
@@ -119,11 +144,19 @@ public class PostWindow extends JFrame {
             if (!webhookUrlField.getText().isEmpty()) {
                 try {
                     Webhook.post(webhookUrlField.getText(), post);
-                    App.getConfig().setWebhookUrl(webhookUrlField.getText());
+                    App.getConfig().setConfigFromGui();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
+    }
+
+    public String getWebhookUrl() {
+        return webhookUrlField.getText();
+    }
+
+    public String getIntroductionText() {
+        return introductionTextField.getText();
     }
 }
